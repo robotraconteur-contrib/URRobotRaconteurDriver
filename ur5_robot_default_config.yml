@@ -103,6 +103,7 @@ joint_info:
     lower: -6.28318530718
     upper: 6.28318530718
     velocity: 3.15
+    acceleration: 3.15
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
@@ -113,6 +114,7 @@ joint_info:
     lower: -6.28318530718
     upper: 6.28318530718
     velocity: 3.15
+    acceleration: 3.15
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
@@ -123,6 +125,7 @@ joint_info:
     lower: -3.14159265359
     upper: 3.14159265359
     velocity: 3.15
+    acceleration: 3.15
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
@@ -133,6 +136,7 @@ joint_info:
     lower: -6.28318530718
     upper: 6.28318530718
     velocity: 3.2
+    acceleration: 3.2
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
@@ -143,6 +147,7 @@ joint_info:
     lower: -6.28318530718
     upper: 6.28318530718
     velocity: 3.2
+    acceleration: 3.2
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
@@ -153,5 +158,6 @@ joint_info:
     lower: -6.28318530718
     upper: 6.28318530718
     velocity: 3.2
+    acceleration: 3.2
   joint_type: revolute
   passive: false

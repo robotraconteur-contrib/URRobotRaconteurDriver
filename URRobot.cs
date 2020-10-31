@@ -1,5 +1,5 @@
 ﻿using com.robotraconteur.robotics.robot;
-using RobotRaconteurWeb.StandardRobDefLib.Robot;
+using RobotRaconteur.Companion.Robot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +18,11 @@ namespace URRobotRaconteurDriver
 
         protected string robot_hostname;
 
-        public URRobot(RobotInfo robot_info, string robot_hostname) : base(robot_info, 6)
+        protected RobustURProgramRunner ur_program_runner;
+        protected string ur_robot_prog;
+        protected string driver_hostname;
+
+        public URRobot(RobotInfo robot_info, string robot_hostname, string driver_hostname, string ur_robot_prog) : base(robot_info, 6)
         {
             this.robot_hostname = robot_hostname;
             _uses_homing = false;
@@ -26,11 +30,13 @@ namespace URRobotRaconteurDriver
             {
                 _joint_names = new string[] { "shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint" };
             }
+
+            this.ur_robot_prog = ur_robot_prog.Replace("%(driver_hostname)",driver_hostname).Replace("%(driver_reverseport)","50001").Replace("\r\n","\n");
+            this.driver_hostname = driver_hostname;
         }
 
         public override void _start_robot()
         {
-
             client = new ControllerClient();
             client.Start(robot_hostname);
 
@@ -39,6 +45,9 @@ namespace URRobotRaconteurDriver
 
             reverse_client = new ReverseSocketProgClient();
             reverse_client.Start();
+
+            ur_program_runner = new RobustURProgramRunner();
+            ur_program_runner.Start(ur_robot_prog, robot_hostname);
 
             base._start_robot();
         }
@@ -86,6 +95,7 @@ namespace URRobotRaconteurDriver
                     _stopped = robot_state.security_stopped;
                     _error = false;
                     _estop_source = 0;
+                    _operational_mode = RobotOperationalMode.cobot;
                 }
             }
 
@@ -102,6 +112,8 @@ namespace URRobotRaconteurDriver
                 _joint_position = state_rt.q_actual;
                 _joint_velocity = state_rt.qd_actual;
                 _joint_effort = state_rt.m_target;
+                _position_command = state_rt.q_target;
+                _velocity_command = state_rt.qd_target;
 
                 var tcp_vec = state_rt.tool_vector;
                 var ep_pose = new com.robotraconteur.geometry.Pose();
@@ -135,6 +147,8 @@ namespace URRobotRaconteurDriver
             
             lock (this)
             {
+                ur_program_runner.UpdateReverseSocketStatus(reverse_client.Connected);
+
                 if (!reverse_client.Connected)
                 {
                     _communication_failure = true;
@@ -150,12 +164,13 @@ namespace URRobotRaconteurDriver
             client?.Dispose();
             client_rt?.Dispose();
             reverse_client?.Dispose();
+            ur_program_runner?.Dispose();
             base.Dispose();
         }
 
-        public override Task setf_signal(string signal_name, double[] value_, CancellationToken rr_cancel = default)
+        public override Task async_setf_signal(string signal_name, double[] value_, int timeout = -1)
         {
-            var signal_names = Enumerable.Range(0, 8).Select(x => $"D{x}").ToArray();
+            var signal_names = Enumerable.Range(0, 8).Select(x => $"DO{x}").ToArray();
 
             if (signal_names.Contains(signal_name))
             {
@@ -164,14 +179,30 @@ namespace URRobotRaconteurDriver
                     throw new ArgumentException("Expected single element array for digital signal");
                 }
 
-                int signal_index = Int32.Parse(signal_name.Replace("D", ""));
+                int signal_index = Int32.Parse(signal_name.Replace("DO", ""));
 
                 reverse_client.SetDigitalOut(signal_index, value_[0] != 0.0);
                 return Task.FromResult(0);
             }
 
             throw new ArgumentException("Invalid signal name");
+        }
 
+        public override Task<double[]> async_getf_signal(string signal_name, int timeout = -1)
+        {
+            var signal_names = Enumerable.Range(0, 8).Select(x => $"DI{x}").ToArray();
+
+            if (signal_names.Contains(signal_name))
+            {
+                int signal_index = Int32.Parse(signal_name.Replace("DI", ""));
+
+                bool val = (client_rt.state.digital_input_bits & (1u >> signal_index)) != 0;
+
+                
+                return Task.FromResult(new double[] { val ? 1.0 : 0.0 });
+            }
+
+            throw new ArgumentException("Invalid signal name");
         }
     }
 }

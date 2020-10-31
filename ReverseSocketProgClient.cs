@@ -45,7 +45,9 @@ namespace UR.ControllerClient
         MSG_RECV_SET_TOOL_VOLTAGE = 32,
         MSG_RECV_UNKNOWN = 33,
         MSG_RECV_SERVOJ = 34,
-        MSG_SPEEDJ = 35
+        MSG_SPEEDJ = 35,
+        MSG_PING = 36,
+        MSG_RECV_PING = 37
 
     }
 
@@ -176,9 +178,20 @@ namespace UR.ControllerClient
                                     s = speedj_command;
                                 }
 
-                                Thread.Sleep(5);
+                                Thread.Sleep(2);
                                 if (p == null && s == null)
                                 {
+                                    w.Begin();
+                                    w.Write((int)ReverseSocketMsgTypeCode.MSG_PING);                                    
+                                    lock (this)
+                                    {
+                                        net_stream.Write(w.GetRawBytes());
+                                    }
+                                    var msg3 = recv_msg_code(net_stream);
+                                    if (msg3 != ReverseSocketMsgTypeCode.MSG_RECV_PING)
+                                    {
+                                        throw new IOException("Invalid message type");
+                                    }
                                     sync.WaitOne(10);
                                     continue;
                                 }
@@ -246,7 +259,7 @@ namespace UR.ControllerClient
                         Connected = false;
                     }
 
-                    for (int i = 0; i < 10; i++)
+                    for (int i = 0; i < 2; i++)
                     {
                         if (!keep_going)
                             break;

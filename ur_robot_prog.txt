@@ -1,0 +1,274 @@
+﻿def driverProg():
+  HOSTNAME = "%(driver_hostname)"
+  PORT = %(driver_reverseport)
+  MSG_OUT = 1
+  MSG_QUIT = 2
+  MSG_JOINT_STATES = 3
+  MSG_MOVEJ = 4
+  MSG_WAYPOINT_FINISHED = 5
+  MSG_STOPJ = 6
+  MSG_SERVOJ = 7
+  MSG_SET_PAYLOAD = 8
+  MSG_WRENCH = 9
+  MSG_SET_DIGITAL_OUT = 10
+  MSG_GET_IO = 11
+  MSG_SET_FLAG = 12
+  MSG_SET_TOOL_VOLTAGE = 13
+  MSG_SET_ANALOG_OUT = 14
+  MSG_BRAKING = 15
+  MSG_SERVOED = 16  
+  MSG_IDLE = 17
+  MSG_HELLO = 18
+  MSG_LISTENING = 19
+  MSG_RECV_NOTHING = 20
+  MSG_RECV_TOOMUCH = 21
+  MSG_RECV_QUIT = 22
+  MSG_RECV_MOVEJ = 23
+  MSG_PARAM_ERR = 24
+  MSG_MOVEJ_STARTED = 25
+  MSG_MOVEJ_FINISHED = 26
+  MSG_RECV_PAYLOAD = 27
+  MSG_RECV_STOPJ = 28
+  MSG_RECV_SET_DIGITAL_OUT = 29
+  MSG_RECV_SET_FLAG = 30
+  MSG_RECV_SET_ANALOG_OUT = 31
+  MSG_RECV_SET_TOOL_VOLTAGE = 32
+  MSG_RECV_UNKNOWN = 33
+  MSG_RECV_SERVOJ = 34
+  MSG_SPEEDJ = 35
+  MSG_PING = 36
+  MSG_RECV_PING = 37
+  MULT_wrench = 10000.0
+  MULT_payload = 1000.0
+  MULT_jointstate = 10000.0
+  MULT_time = 1000000.0
+  MULT_blend = 1000.0
+  MULT_analog = 1000000.0
+  pi = 3.14159265359
+  
+  stopj(1)
+
+  def send_out(msgcode):
+    enter_critical
+    socket_send_int(msgcode)
+    exit_critical
+  end
+  
+  def send_waypoint_finished(waypoint_id):
+    enter_critical
+    socket_send_int(MSG_WAYPOINT_FINISHED)
+    #socket_send_int(waypoint_id)
+    exit_critical
+  end
+
+  
+  SERVO_IDLE = 0
+  SERVO_RUNNING = 1
+  cmd_servo_state = SERVO_IDLE
+  cmd_servo_id = 0  # 0 = idle, -1 = stop
+  cmd_servo_q = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  cmd_servo_dt = 0.0
+  cmd_servo_mode = 0
+  cmd_seqno = 0
+  thread_seqno = 0
+  def set_servo_setpoint(mode, id, q, dt):
+    
+    enter_critical
+    cmd_servo_state = SERVO_RUNNING
+    cmd_servo_id = id
+    cmd_servo_q = q
+    cmd_servo_dt = dt
+    cmd_servo_mode = mode
+    cmd_seqno = thread_seqno
+    exit_critical
+    
+  end
+  thread servoThread():
+    
+    state = SERVO_IDLE
+    while True:
+      # Latches the new command
+      enter_critical
+      thread_seqno = thread_seqno + 1
+      q = cmd_servo_q
+      dt = cmd_servo_dt
+      id = cmd_servo_id
+      do_brake = False
+      if (state == SERVO_RUNNING) and (cmd_servo_state == SERVO_IDLE):
+        # No command pending
+        do_brake = True
+      end
+      state = cmd_servo_state
+      cmd_servo_state = SERVO_IDLE
+      exit_critical
+      
+      # do_brake = False
+      # state == SERVO_RUNNING
+      # Executes the command
+      if do_brake:
+        #stopj(1.0)  # TODO
+        #send_out(MSG_BRAKING)
+        sync()
+      elif state == SERVO_RUNNING:
+        if cmd_servo_mode == MSG_SERVOJ:
+          servoj(q, 0, 0, 0.1)
+        end
+        if cmd_servo_mode == MSG_SPEEDJ:
+          if ((cmd_seqno + 20000) > thread_seqno):
+            speedj(q, 2, dt)
+          else:
+            stopj(2)
+          end
+        end       
+        #send_out(MSG_SERVOED)
+      else:
+        #send_out(MSG_IDLE)
+        sync()
+      end
+    end
+  end
+  
+  socket_open(HOSTNAME, PORT)
+  send_out(MSG_HELLO)
+  
+  thread_servo = run servoThread()
+  
+  # Servoes in a circle
+  #movej([1.5,-0.4,-1.57,0,0,0], 3, 0.75, 1.0)
+  #t = 0
+  #while True:
+  #  q = [1.5,0,-1.57,0,0,0]
+  #  q[0] = q[0] + 0.2 * sin(0.25 * t*(2*pi))
+  #  q[1] = q[1] - 0.2 + 0.2 * cos(0.25 * t*(2*pi))
+  #  #servoj(q, 3, 1, 0.08)
+  #  #send_out(MSG_SERVOED)
+  #  set_servo_setpoint(t, q, 0.08)
+  #  t = t + 0.08
+  #  sleep(0.08)
+  #end
+  
+  while True:
+    #send_out(MSG_LISTENING)
+    sync()
+    ll = socket_read_binary_integer(1)
+    
+    if ll[0] == 0:
+      #send_out(MSG_RECV_NOTHING)
+    elif ll[0] > 1:
+      send_out(MSG_RECV_TOOMUCH)
+    else:
+      mtype = ll[1]
+      if mtype == MSG_QUIT:
+        send_out(MSG_RECV_QUIT)
+        break
+      elif mtype == MSG_MOVEJ:
+        send_out(MSG_RECV_MOVEJ)
+        params_movej = socket_read_binary_integer(1+6+4)
+        if params_movej[0] == 0:
+          send_out(MSG_PARAM_ERR)
+        end
+        
+        # Unpacks the parameters
+        waypoint_id = params_movej[1]
+        q = [params_movej[2] / MULT_jointstate,
+                   params_movej[3] / MULT_jointstate,
+                   params_movej[4] / MULT_jointstate,
+                   params_movej[5] / MULT_jointstate,
+                   params_movej[6] / MULT_jointstate,
+                   params_movej[7] / MULT_jointstate]
+        a = params_movej[8] / MULT_jointstate
+        v = params_movej[9] / MULT_jointstate
+        t = params_movej[10] / MULT_time
+        r = params_movej[11] / MULT_blend
+        
+        # Sends the command
+        send_out(MSG_MOVEJ_STARTED)
+        movej(q, a, v, t, r)
+        send_waypoint_finished(waypoint_id)
+        send_out(MSG_MOVEJ_FINISHED)
+      elif (mtype == MSG_SERVOJ) or (mtype == MSG_SPEEDJ):
+        # Reads the parameters
+        params_servoj = socket_read_binary_integer(1+6+1)
+        if params_servoj[0] == 0:
+          send_out(MSG_PARAM_ERR)
+        end
+        
+        # Unpacks the parameters
+        waypoint_id = params_servoj[1]
+        q = [params_servoj[2] / MULT_jointstate,
+                   params_servoj[3] / MULT_jointstate,
+                   params_servoj[4] / MULT_jointstate,
+                   params_servoj[5] / MULT_jointstate,
+                   params_servoj[6] / MULT_jointstate,
+                   params_servoj[7] / MULT_jointstate]
+        t = params_servoj[8] / MULT_time
+        
+        # Servos
+        #servoj(q, 3, 0.1, t)
+        #send_waypoint_finished(waypoint_id)
+        set_servo_setpoint(mtype, waypoint_id, q, t)
+        send_out(MSG_RECV_SERVOJ)
+        
+      elif mtype == MSG_SET_PAYLOAD:
+        params = socket_read_binary_integer(1)
+        if params[0] == 0:
+          send_out(MSG_PARAM_ERR)
+        end
+        
+        payload = params[1] / MULT_payload
+        #send_out(payload)
+        send_out(MSG_RECV_PAYLOAD)
+        set_payload(payload)
+      elif mtype == MSG_STOPJ:
+        send_out(MSG_RECV_STOPJ)
+        stopj(1.0)
+      elif mtype == MSG_SET_DIGITAL_OUT:
+        #send_out(MSG_RECV_SET_DIGITAL_OUT)
+        # Reads the parameters
+        params_sdo = socket_read_binary_integer(2)
+        if params_sdo[0] == 0:
+          send_out(MSG_PARAM_ERR)
+        end
+        if params_sdo[2] > 0:
+           set_digital_out(params_sdo[1], True)
+        elif params_sdo[2] == 0:
+          set_digital_out(params_sdo[1], False)
+        end
+      elif mtype == MSG_SET_FLAG:
+        #send_out(MSG_RECV_SET_FLAG)
+        # Reads the parameters
+        params_sf = socket_read_binary_integer(2)
+        if params_sf[0] == 0:
+          send_out(MSG_PARAM_ERR)
+        end
+        if params_sf[2] != 0:
+          set_flag(params_sf[1], True)
+        elif params_sf[2] == 0:
+          set_flag(params_sf[1], False)
+        end
+      elif mtype == MSG_SET_ANALOG_OUT:
+        #send_out(MSG_SET_ANALOG_OUT)
+        # Reads the parameters
+        params_sao = socket_read_binary_integer(2)
+        if params_sao[0] == 0:
+          send_out(MSG_PARAM_ERR)
+        end
+        set_analog_out(params_sao[1], (params_sao[2] / MULT_analog))
+      elif mtype == MSG_SET_TOOL_VOLTAGE:
+        #send_out(MSG_RECV_SET_TOOL_VOLTAGE)
+        # Reads the parameters (also reads second dummy '0' integer)
+        params_stv = socket_read_binary_integer(2)
+        if params_stv[0] == 0:
+          send_out(MSG_PARAM_ERR)
+        end
+        set_tool_voltage(params_stv[1])
+      elif mtype == MSG_PING:
+        send_out(MSG_RECV_PING)
+      else:
+        send_out(MSG_RECV_UNKNOWN)
+      end
+    end
+  end
+  
+  socket_send_int(MSG_QUIT)
+end
