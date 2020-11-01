@@ -296,5 +296,25 @@ namespace UR.ControllerClient
             }
 
         }
+
+        public void SetAnalogOut(int index, double value)
+        {
+            var net_stream1 = net_stream;
+            if (net_stream1 == null)
+            {
+                throw new InvalidOperationException("Robot is not connected");
+            }
+
+            var w = new PackageWriter();
+            w.Begin();
+            w.Write((int)ReverseSocketMsgTypeCode.MSG_SET_ANALOG_OUT);
+            w.Write((int)index);
+            w.Write((int)(value*MULT_analog));
+            lock (this)
+            {
+                net_stream.Write(w.GetRawBytes());
+            }
+
+        }
     }
 }

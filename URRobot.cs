@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using UR.ControllerClient;
@@ -170,18 +171,47 @@ namespace URRobotRaconteurDriver
 
         public override Task async_setf_signal(string signal_name, double[] value_, int timeout = -1)
         {
-            var signal_names = Enumerable.Range(0, 8).Select(x => $"DO{x}").ToArray();
 
-            if (signal_names.Contains(signal_name))
+            var digital_out_match = Regex.Match(signal_name, @"DO(\d+)");            
+
+            if (digital_out_match.Success)
             {
+                int digital_out_index = int.Parse(digital_out_match.Groups[1].Value);
+                if (digital_out_index < 0 || digital_out_index > 9)
+                {
+                    throw new ArgumentException("Digital output DO0 through DO9 expected");
+                }
+
                 if (value_.Length != 1)
                 {
                     throw new ArgumentException("Expected single element array for digital signal");
                 }
 
-                int signal_index = Int32.Parse(signal_name.Replace("DO", ""));
+                
+                reverse_client.SetDigitalOut(digital_out_index, value_[0] != 0.0);
+                return Task.FromResult(0);
+            }
 
-                reverse_client.SetDigitalOut(signal_index, value_[0] != 0.0);
+            var analog_out_match = Regex.Match(signal_name, @"AO(\d+)");
+            if (analog_out_match.Success)
+            {
+                int analog_out_index = int.Parse(analog_out_match.Groups[1].Value);
+                if (analog_out_index < 0 || analog_out_index > 1)
+                {
+                    throw new ArgumentException("Analog output AO0 through AO1 expected");
+                }
+
+                if (value_.Length != 1)
+                {
+                    throw new ArgumentException("Expected single element array for analog signal");
+                }
+
+                var v = value_[0];
+                if (v < 0 || v > 1)
+                {
+                    throw new ArgumentException("Analog output command must be between 0 and 1");
+                }
+                reverse_client.SetAnalogOut(analog_out_index, v);
                 return Task.FromResult(0);
             }
 
@@ -190,16 +220,51 @@ namespace URRobotRaconteurDriver
 
         public override Task<double[]> async_getf_signal(string signal_name, int timeout = -1)
         {
-            var signal_names = Enumerable.Range(0, 8).Select(x => $"DI{x}").ToArray();
+            var digital_in_match = Regex.Match(signal_name, @"DI(\d+)");
 
-            if (signal_names.Contains(signal_name))
+            if (digital_in_match.Success)
             {
-                int signal_index = Int32.Parse(signal_name.Replace("DI", ""));
+                int digital_in_index = int.Parse(digital_in_match.Groups[1].Value);
+                if (digital_in_index < 0 || digital_in_index > 9)
+                {
+                    throw new ArgumentException("Digital input DI0 through DI9 expected");
+                }                
 
-                bool val = (client_rt.state.digital_input_bits & (1u >> signal_index)) != 0;
-
+                bool val = (client_rt.state.digital_input_bits & (1u >> digital_in_index)) != 0;
                 
                 return Task.FromResult(new double[] { val ? 1.0 : 0.0 });
+            }
+
+            var analog_in_match = Regex.Match(signal_name, @"AI(\d+)");
+            if (analog_in_match.Success)
+            {
+                int analog_in_index = int.Parse(analog_in_match.Groups[1].Value);
+                if (analog_in_index < 0 || analog_in_index > 4)
+                {
+                    throw new ArgumentException("Analog input AI0 through AI4 expected");
+                }
+
+                double val;
+                switch (analog_in_index)
+                {
+                    case 0:
+                        val = client.robot_state.master_board_data.analogInput0;
+                        break;
+                    case 1:
+                        val = client.robot_state.master_board_data.analogInput1;
+                        break;
+                    case 2:
+                        val = client.robot_state.tool_data.analogInput2;
+                        break;
+                    case 3:
+                        val = client.robot_state.tool_data.analogInput3;
+                        break;
+                    default:
+                        val = 0.0;
+                        break;
+                }
+
+                return Task.FromResult(new double[] { val });
             }
 
             throw new ArgumentException("Invalid signal name");

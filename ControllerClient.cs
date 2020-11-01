@@ -70,9 +70,90 @@ namespace UR.ControllerClient
         }
     }
 
+    public class MasterboardData_V18
+    {
+        public ushort digitalInputBits;
+        public ushort digitalOutputBits;
+        public byte analogInputRange0;
+        public byte analogInputRange1;
+        public double analogInput0;
+        public double analogInput1;
+        public byte analogOutputDomain0;
+        public byte analogOutputDomain1;
+        public double analogOutput0;
+        public double analogOutput1;
+        public float masterBoardTemperature;
+        public float robotVoltage48V;
+        public float robotCurrent;
+        public float masterIOCurrent;
+        public byte masterSafetyState;
+        public byte masterOnOffState;
+        public byte euromap67InterfaceInstalled;
+
+        public void Read(PackageReader r)
+        {
+            if (r.PackageRemaining != 60)
+                throw new IOException("Invalid RobotModeData length");
+            if (r.ReadByte() != (byte)PackageType.MASTERBOARD_DATA)
+                throw new IOException("Invalid MasterboardData package type");
+
+            digitalInputBits = r.ReadUInt16();
+            digitalOutputBits = r.ReadUInt16();
+            analogInputRange0 = r.ReadByte();
+            analogInputRange1 = r.ReadByte();
+            analogInput0 = r.ReadDouble();
+            analogInput1 = r.ReadDouble();
+            analogOutputDomain0 = r.ReadByte();
+            analogOutputDomain1 = r.ReadByte();
+            analogOutput0 = r.ReadDouble();
+            analogOutput1 = r.ReadDouble();
+            masterBoardTemperature = r.ReadSingle();
+            robotVoltage48V = r.ReadSingle();
+            robotCurrent = r.ReadSingle();
+            masterIOCurrent = r.ReadSingle();
+            masterSafetyState = r.ReadByte();
+            masterOnOffState = r.ReadByte();
+            euromap67InterfaceInstalled = r.ReadByte();
+
+        }
+    }
+
+    public class ToolData_V18
+    {
+        public byte analogInputRange2;
+        public byte analogInputRange3;
+        public double analogInput2;
+        public double analogInput3;
+        public float toolVoltage48V;
+        public byte toolOutputVoltage;
+        public float toolCurrent;
+        public float toolTemperature;
+        public byte toolMode;
+
+        public void Read(PackageReader r)
+        {
+            if (r.PackageRemaining != 33)
+                throw new IOException("Invalid ToolData length");
+            if (r.ReadByte() != (byte)PackageType.TOOL_DATA)
+                throw new IOException("Invalid ToolData package type");
+
+            analogInputRange2 = r.ReadByte();
+            analogInputRange3 = r.ReadByte();
+            analogInput2 = r.ReadDouble();
+            analogInput3 = r.ReadDouble();
+            toolVoltage48V = r.ReadSingle();
+            toolOutputVoltage = r.ReadByte();
+            toolCurrent = r.ReadSingle();
+            toolTemperature = r.ReadSingle();
+            toolMode = r.ReadByte();
+        }
+    }
+
     public class RobotState
     {
         public RobotModeData_V18 robot_mode_data = new RobotModeData_V18();
+        public MasterboardData_V18 master_board_data = new MasterboardData_V18();
+        public ToolData_V18 tool_data = new ToolData_V18();
 
         public void Read(PackageReader r)
         {
@@ -83,6 +164,14 @@ namespace UR.ControllerClient
                 if (package_type == (byte)PackageType.ROBOT_MODE_DATA)
                 {
                     robot_mode_data.Read(r2);
+                }
+                if (package_type == (byte)PackageType.MASTERBOARD_DATA)
+                {
+                    master_board_data.Read(r2);
+                }
+                if (package_type == (byte)PackageType.TOOL_DATA)
+                {
+                    tool_data.Read(r2);
                 }
             }
 

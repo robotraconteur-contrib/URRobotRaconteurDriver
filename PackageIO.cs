@@ -230,6 +230,18 @@ namespace UR.Package
             return BitConverter.ToUInt32(temp, 0);
         }
 
+        public float ReadSingle()
+        {
+            CheckAvailable(4);
+            temp[3] = buffer[buffer_pos];
+            temp[2] = buffer[buffer_pos + 1];
+            temp[1] = buffer[buffer_pos + 2];
+            temp[0] = buffer[buffer_pos + 3];
+            
+            buffer_pos += 4;
+            return BitConverter.ToSingle(temp, 0);
+        }
+
         public double ReadDouble()
         {
             CheckAvailable(8);
