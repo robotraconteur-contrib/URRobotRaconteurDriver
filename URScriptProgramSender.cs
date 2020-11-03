@@ -138,7 +138,7 @@ namespace URRobotRaconteurDriver
         
         bool reverse_socket_connected;
 
-        public void UpdateReverseSocketStatus(bool connected)
+        public void UpdateConnectedStatus(bool connected)
         {
             lock (this)
             {

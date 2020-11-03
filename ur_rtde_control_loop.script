@@ -1,0 +1,57 @@
+def rtde_control_loop():
+  set_tcp(p[0.0,0.0,0.0,0.0,0.0,0.0])
+  set_payload(0.0)
+  step_count_c93bc054_c038_49db_a542_98fbf1b50896 = 0.0
+  thread Step_Counter_Thread_2e3b972e_beae_45c9_b0ec_d8c1e5238d62():
+    while (True):
+      step_count_c93bc054_c038_49db_a542_98fbf1b50896 = step_count_c93bc054_c038_49db_a542_98fbf1b50896 + 1.0
+      sync()
+    end
+  end
+  run Step_Counter_Thread_2e3b972e_beae_45c9_b0ec_d8c1e5238d62()
+  set_safety_mode_transition_hardness(1)
+  set_gravity([0.0, 0.0, 9.82])
+  set_tool_voltage(0)
+  set_standard_analog_input_domain(0, 1)
+  set_standard_analog_input_domain(1, 1)
+  set_tool_analog_input_domain(0, 1)
+  set_tool_analog_input_domain(1, 1)
+  set_analog_outputdomain(0, 0)
+  set_analog_outputdomain(1, 0)
+  set_input_actions_to_default()
+  global setp=get_target_joint_positions()
+  rtde_set_watchdog("input_int_register_0", 60, "PAUSE")
+  global seqno=0
+  thread Thread_1():
+    while (True):
+      global setp=get_target_joint_positions()
+      while (True):
+        global tmp=[0,0,0,0,0,0]
+        tmp[0] = read_input_float_register(0)
+        tmp[1] = read_input_float_register(1)
+        tmp[2] = read_input_float_register(2)
+        tmp[3] = read_input_float_register(3)
+        tmp[4] = read_input_float_register(4)
+        tmp[5] = read_input_float_register(5)
+        if (read_input_integer_register(1) != 0):
+          global setp=tmp
+        end
+        sync()
+      end
+    end
+  end
+  threadId_Thread_1 = run Thread_1()
+  while (True):
+    if (seqno > 1e9):
+      global seqno=0
+    else:
+      global seqno=seqno + 1
+    end
+    write_output_integer_register(0, seqno)
+    sync()
+    servoj(setp,3,0.1,0.1)
+    global seqno=seqno + 1
+    write_output_integer_register(0, seqno)
+    sync()
+  end
+end

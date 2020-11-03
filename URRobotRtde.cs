@@ -1,4 +1,5 @@
-﻿using com.robotraconteur.robotics.robot;
+﻿using com.robotraconteur.geometry;
+using com.robotraconteur.robotics.robot;
 using RobotRaconteur.Companion.Robot;
 using System;
 using System.Collections.Generic;
@@ -8,22 +9,43 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using UR.ControllerClient;
+using UR.RTDE;
 
 namespace URRobotRaconteurDriver
 {
-    public class URRobot : AbstractRobot
+    public class URRobotRtde : AbstractRobot, IURRobot
     {
-        protected ControllerClient client;
-        protected ControllerClientRT client_rt;
-        protected ReverseSocketProgClient reverse_client;
-
         protected string robot_hostname;
 
+        RtdeClient rtde_client;
         protected RobustURProgramRunner ur_program_runner;
         protected string ur_robot_prog;
-        protected string driver_hostname;
 
-        public URRobot(RobotInfo robot_info, string robot_hostname, string driver_hostname, string ur_robot_prog) : base(robot_info, 6)
+        public static Quaternion rvec_to_quaternion(double[] rvec)
+        {
+            double norm = Math.Sqrt(Math.Pow(rvec[3],2) + Math.Pow(rvec[4],2) + Math.Pow(rvec[5],2));
+            if (norm < 1e-5)
+            {
+                return new Quaternion { w = 1, x = 0, y = 0, z = 0 };
+            }
+
+            double x = rvec[3] / norm;
+            double y = rvec[4] / norm;
+            double z = rvec[5] / norm;
+
+            double s = Math.Sin(norm / 2.0);
+            double c = Math.Cos(norm / 2.0);
+
+            return new Quaternion
+            {
+                w = c,
+                x = x * s,
+                y = y * s,
+                z = z * s
+            };
+        }
+
+        public URRobotRtde(RobotInfo robot_info, string robot_hostname, string ur_robot_prog) : base(robot_info, 6)
         {
             this.robot_hostname = robot_hostname;
             _uses_homing = false;
@@ -32,25 +54,20 @@ namespace URRobotRaconteurDriver
                 _joint_names = new string[] { "shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint" };
             }
 
-            this.ur_robot_prog = ur_robot_prog.Replace("%(driver_hostname)",driver_hostname).Replace("%(driver_reverseport)","50001").Replace("\r\n","\n");
-            this.driver_hostname = driver_hostname;
+            robot_info.robot_capabilities &= (uint)(RobotCapabilities.jog_command & RobotCapabilities.position_command & RobotCapabilities.trajectory_command);
+            this.ur_robot_prog = ur_robot_prog;
         }
 
         public override void _start_robot()
         {
-            client = new ControllerClient();
-            client.Start(robot_hostname);
-
-            client_rt = new ControllerClientRT();
-            client_rt.Start(robot_hostname);
-
-            reverse_client = new ReverseSocketProgClient();
-            reverse_client.Start();
-
             ur_program_runner = new RobustURProgramRunner();
             ur_program_runner.Start(ur_robot_prog, robot_hostname);
 
+            rtde_client = new RtdeClient();
+            
+
             base._start_robot();
+            rtde_client.Start(_stopwatch, robot_hostname);
         }
 
         protected override Task _send_disable()
@@ -72,61 +89,62 @@ namespace URRobotRaconteurDriver
         {
             if (joint_pos_cmd != null)
             {
-                reverse_client.SetServojCommand(joint_pos_cmd);
+                rtde_client.SetJointCommand(joint_pos_cmd);
             }
             else
-            if (joint_vel_cmd != null)
             {
-                reverse_client.SetSpeedjCommand(joint_vel_cmd);
+                rtde_client.ClearJointCommand();
             }
         }
 
         protected override void _run_timestep(long now)
         {
 
-            if (client.Connected)
+            if (rtde_client.Connected)
             {
                 _last_robot_state = now;
-                lock (client)
+                uint status_bits;
+                uint safety_bits;
+                lock (rtde_client)
                 {
-                    var robot_state = client.robot_state.robot_mode_data;
-                    _homed = true;
-                    _enabled = robot_state.real_robot_enabled && !robot_state.security_stopped;
-                    _ready = robot_state.program_running;
-                    _stopped = robot_state.security_stopped;
-                    _error = false;
-                    _estop_source = 0;
-                    _operational_mode = RobotOperationalMode.cobot;
+                    status_bits = rtde_client.robot_status_bits;
+                    safety_bits = rtde_client.safety_status_bits;
                 }
+                _homed = true;
+                _enabled = (status_bits & ((uint)RTDE_ROBOT_STATUS_BITS.power_on)) != 0;
+                _ready = (status_bits & ((uint)RTDE_ROBOT_STATUS_BITS.power_on)) != 0 && (status_bits & ((uint)RTDE_ROBOT_STATUS_BITS.program_running)) != 0;
+                _stopped = (safety_bits & ((uint)RTDE_SAFETY_STATUS_BITS.protective_stopped)) != 0 || (safety_bits & ((uint)RTDE_SAFETY_STATUS_BITS.emergency_stopped)) != 0 || (safety_bits & ((uint)RTDE_SAFETY_STATUS_BITS.safety_stopped)) != 0;
+                _error = (safety_bits & ((uint)RTDE_SAFETY_STATUS_BITS.fault)) != 0 || (safety_bits & ((uint)RTDE_SAFETY_STATUS_BITS.violation)) != 0;
+                _estop_source = 0;
+                _operational_mode = RobotOperationalMode.cobot;
+                
             }
 
-            if (client_rt.Connected)
+            if (rtde_client.Connected)
             {
-
                 // Bit of a hack for reverse socket connection notification
                 _last_joint_state = now;
                 _last_endpoint_state = now;
             }
-            lock (client_rt)
-            {
-                var state_rt = client_rt.state;
-                _joint_position = state_rt.q_actual;
-                _joint_velocity = state_rt.qd_actual;
-                _joint_effort = state_rt.m_target;
-                _position_command = state_rt.q_target;
-                _velocity_command = state_rt.qd_target;
+            lock (rtde_client)
+            {                
+                _joint_position = rtde_client.actual_q;
+                _joint_velocity = rtde_client.actual_qd;
+                _joint_effort = rtde_client.target_moment;
+                _position_command = rtde_client.target_q;
+                _velocity_command = rtde_client.target_qd;
 
-                var tcp_vec = state_rt.tool_vector;
+                var ep_vec = rtde_client.actual_TCP_pose;
                 var ep_pose = new com.robotraconteur.geometry.Pose();
-                ep_pose.position.x = tcp_vec[0];
-                ep_pose.position.y = tcp_vec[1];
-                ep_pose.position.z = tcp_vec[2];
+                ep_pose.position.x = ep_vec[0];
+                ep_pose.position.y = ep_vec[1];
+                ep_pose.position.z = ep_vec[2];
 
-                // TODO: orientation
+                ep_pose.orientation = rvec_to_quaternion(ep_vec);
 
                 _endpoint_pose = new com.robotraconteur.geometry.Pose[] { ep_pose };
 
-                var tcp_vel = state_rt.tcp_speed;
+                var tcp_vel = rtde_client.actual_TCP_speed;
                 var ep_vel = new com.robotraconteur.geometry.SpatialVelocity();
                 ep_vel.angular.x = tcp_vel[3];
                 ep_vel.angular.y = tcp_vel[4];
@@ -148,9 +166,8 @@ namespace URRobotRaconteurDriver
             
             lock (this)
             {
-                ur_program_runner.UpdateReverseSocketStatus(reverse_client.Connected);
-
-                if (!reverse_client.Connected)
+                ur_program_runner.UpdateConnectedStatus(rtde_client.Connected);
+                if (!rtde_client.Connected)
                 {
                     _communication_failure = true;
                     _command_mode = RobotCommandMode.invalid_state;
@@ -162,10 +179,7 @@ namespace URRobotRaconteurDriver
 
         public override void Dispose()
         {
-            client?.Dispose();
-            client_rt?.Dispose();
-            reverse_client?.Dispose();
-            ur_program_runner?.Dispose();
+            rtde_client?.Dispose();
             base.Dispose();
         }
 
@@ -177,9 +191,9 @@ namespace URRobotRaconteurDriver
             if (digital_out_match.Success)
             {
                 int digital_out_index = int.Parse(digital_out_match.Groups[1].Value);
-                if (digital_out_index < 0 || digital_out_index > 9)
+                if (digital_out_index < 0 || digital_out_index > 7)
                 {
-                    throw new ArgumentException("Digital output DO0 through DO9 expected");
+                    throw new ArgumentException("Digital output DO0 through DO7 expected");
                 }
 
                 if (value_.Length != 1)
@@ -188,7 +202,7 @@ namespace URRobotRaconteurDriver
                 }
 
                 
-                reverse_client.SetDigitalOut(digital_out_index, value_[0] != 0.0);
+                rtde_client.SetDigitalOut(digital_out_index, value_[0] != 0.0);
                 return Task.FromResult(0);
             }
 
@@ -211,7 +225,7 @@ namespace URRobotRaconteurDriver
                 {
                     throw new ArgumentException("Analog output command must be between 0 and 1");
                 }
-                reverse_client.SetAnalogOut(analog_out_index, v);
+                rtde_client.SetAnalogOut(analog_out_index, v);
                 return Task.FromResult(0);
             }
 
@@ -230,7 +244,13 @@ namespace URRobotRaconteurDriver
                     throw new ArgumentException("Digital input DI0 through DI9 expected");
                 }                
 
-                bool val = (client_rt.state.digital_input_bits & (1u >> digital_in_index)) != 0;
+                if (digital_in_index >= 8)
+                {
+                    // Skip configurable inputs, match reverse socket behavior
+                    digital_in_index += 8;
+                }
+
+                bool val = (rtde_client.actual_digital_input_bits & (1u >> digital_in_index)) != 0;
                 
                 return Task.FromResult(new double[] { val ? 1.0 : 0.0 });
             }
@@ -248,16 +268,16 @@ namespace URRobotRaconteurDriver
                 switch (analog_in_index)
                 {
                     case 0:
-                        val = client.robot_state.master_board_data.analogInput0;
+                        val = rtde_client.actual_analog_input0;
                         break;
                     case 1:
-                        val = client.robot_state.master_board_data.analogInput1;
+                        val = rtde_client.actual_analog_input1;
                         break;
                     case 2:
-                        val = client.robot_state.tool_data.analogInput2;
+                        val = rtde_client.tool_analog_input0;
                         break;
                     case 3:
-                        val = client.robot_state.tool_data.analogInput3;
+                        val = rtde_client.tool_analog_input1;
                         break;
                     default:
                         val = 0.0;

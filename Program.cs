@@ -19,12 +19,14 @@ namespace URRobotRaconteurDriver
             string driver_hostname = null;
             bool wait_signal = false;
             string ur_script_file = null;
+            bool cb2_compat = false;
 
             var options = new OptionSet {
                 { "robot-info-file=", n => robot_info_file = n },
                 { "robot-hostname=", n => robot_hostname = n },
                 { "driver-hostname=", n=> driver_hostname = n },
                 { "ur-script-file=", n =>  ur_script_file = n},
+                { "cb2-compat", n => cb2_compat = n != null },
                 { "h|help", "show this message and exit", h => shouldShowHelp = h != null },
                 {"wait-signal", "wait for POSIX sigint or sigkill to exit", n=> wait_signal = n!=null}
             };
@@ -60,23 +62,49 @@ namespace URRobotRaconteurDriver
             }
 
             string ur_robot_prog = null;
-            if (ur_script_file != null)
+
+            if (cb2_compat)
             {
-                ur_robot_prog = File.ReadAllText(ur_script_file);
+                if (ur_script_file != null)
+                {
+                    ur_robot_prog = File.ReadAllText(ur_script_file);
+                }
+                else
+                {
+                    using (var stream = typeof(Program).Assembly.GetManifestResourceStream("URRobotRaconteurDriver.ur_reverse_socket_control_loop.script"))
+                    using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8))
+                        ur_robot_prog = reader.ReadToEnd();
+                }
+
             }
             else
-            {                
-                using (var stream = typeof(Program).Assembly.GetManifestResourceStream("URRobotRaconteurDriver.ur_robot_prog.txt"))
-                using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8))
-                    ur_robot_prog = reader.ReadToEnd();
+            {
+                if (ur_script_file != null)
+                {
+                    ur_robot_prog = File.ReadAllText(ur_script_file);
+                }
+                else
+                {
+                    using (var stream = typeof(Program).Assembly.GetManifestResourceStream("URRobotRaconteurDriver.ur_rtde_control_loop.script"))
+                    using (var reader = new StreamReader(stream, System.Text.Encoding.UTF8))
+                        ur_robot_prog = reader.ReadToEnd();
+                }
             }
-
 
             var robot_info = RobotInfoParser.LoadRobotInfoYamlWithIdentifierLocks(robot_info_file);
             using (robot_info.Item2)
             {
+                IURRobot robot;
+                if (cb2_compat)
+                {
+                    robot = new URRobotReverseSocket(robot_info.Item1, robot_hostname, driver_hostname, ur_robot_prog);
+                }
+                else
+                {
+                    robot = new URRobotRtde(robot_info.Item1, robot_hostname, ur_robot_prog);
+                }
 
-                using (var robot = new URRobot(robot_info.Item1, robot_hostname, driver_hostname, ur_robot_prog))
+                using (robot)
                 {
                     robot._start_robot();
                     using (var node_setup = new ServerNodeSetup("ur_robot", 58652, args))

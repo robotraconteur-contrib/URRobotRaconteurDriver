@@ -6,11 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ur_robot_prog.txt" />
+    <None Remove="ur_reverse_socket_control_loop.script" />
+    <None Remove="ur_rtde_control_loop.script" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="ur_robot_prog.txt" />
+    <EmbeddedResource Include="ur_rtde_control_loop.script" />
+    <EmbeddedResource Include="ur_reverse_socket_control_loop.script" />
   </ItemGroup>
 
   <ItemGroup>
