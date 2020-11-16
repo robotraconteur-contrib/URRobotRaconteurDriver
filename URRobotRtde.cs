@@ -56,6 +56,9 @@ namespace URRobotRaconteurDriver
 
             robot_info.robot_capabilities &= (uint)(RobotCapabilities.jog_command & RobotCapabilities.position_command & RobotCapabilities.trajectory_command);
             this.ur_robot_prog = ur_robot_prog;
+
+            // TODO: figure out why trajectory tolerance is so poor
+            this._trajectory_error_tol = 5 * Math.PI / 180.0;
         }
 
         public override void _start_robot()
@@ -132,7 +135,7 @@ namespace URRobotRaconteurDriver
                 _joint_velocity = rtde_client.actual_qd;
                 _joint_effort = rtde_client.target_moment;
                 _position_command = rtde_client.target_q;
-                _velocity_command = rtde_client.target_qd;
+                //_velocity_command = rtde_client.target_qd;
 
                 var ep_vec = rtde_client.actual_TCP_pose;
                 var ep_pose = new com.robotraconteur.geometry.Pose();

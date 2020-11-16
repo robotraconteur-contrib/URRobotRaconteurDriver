@@ -34,6 +34,9 @@ namespace URRobotRaconteurDriver
 
             this.ur_robot_prog = ur_robot_prog.Replace("%(driver_hostname)",driver_hostname).Replace("%(driver_reverseport)","50001").Replace("\r\n","\n");
             this.driver_hostname = driver_hostname;
+
+            // TODO: figure out why trajectory tolerance is so poor
+            this._trajectory_error_tol = 5 * Math.PI / 180.0;
         }
 
         public override void _start_robot()
@@ -114,7 +117,7 @@ namespace URRobotRaconteurDriver
                 _joint_velocity = state_rt.qd_actual;
                 _joint_effort = state_rt.m_target;
                 _position_command = state_rt.q_target;
-                _velocity_command = state_rt.qd_target;
+                //_velocity_command = state_rt.qd_target;
 
                 var tcp_vec = state_rt.tool_vector;
                 var ep_pose = new com.robotraconteur.geometry.Pose();
