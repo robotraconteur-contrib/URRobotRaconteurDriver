@@ -36,7 +36,9 @@ namespace URRobotRaconteurDriver
             this.driver_hostname = driver_hostname;
 
             // TODO: figure out why trajectory tolerance is so poor
-            this._trajectory_error_tol = 5 * Math.PI / 180.0;
+            //this._trajectory_error_tol = 5 * Math.PI / 180.0;
+
+            this._trajectory_error_tol = 1000;
         }
 
         public override void _start_robot()
