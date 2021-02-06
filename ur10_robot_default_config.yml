@@ -1,13 +1,13 @@
 device_info:
   device:
-    name: ur5_robot
+    name: ur10_robot
   manufacturer:
     name: Universal_Robots
     uuid: d80db3c2-3de8-41e3-97f9-62765a7063b8
   model:
-    name: UR5
-    uuid: 1d3f5111-01fa-4ecf-a11e-76810d5e1dde
-  user_description: Universal Robots UR5 Robot
+    name: UR10
+    uuid: e3d9caac-a3de-4a2d-81f8-73620ddce5bf
+  user_description: Universal Robots UR10 Robot
   serial_number: 123456789
   device_classes:
     - class_identifier:

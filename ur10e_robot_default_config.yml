@@ -1,13 +1,13 @@
 device_info:
   device:
-    name: ur5_robot
+    name: ur10e_robot
   manufacturer:
     name: Universal_Robots
     uuid: d80db3c2-3de8-41e3-97f9-62765a7063b8
   model:
-    name: UR5
-    uuid: 1d3f5111-01fa-4ecf-a11e-76810d5e1dde
-  user_description: Universal Robots UR5 Robot
+    name: UR10e
+    uuid: d9446c86-868e-4651-b0e3-9c93f5b4f3e7
+  user_description: Universal Robots UR10e Robot
   serial_number: 123456789
   device_classes:
     - class_identifier:
@@ -48,24 +48,24 @@ chains:
   P:
   - x: 0.0
     y: 0.0
-    z: 0.089159
+    z: 0.181
   - x: 0.0
-    y: -0.13585
+    y: -0.176
     z: 0.0
-  - x: -0.425
-    y: 0.11969999999999995
+  - x: -0.613
+    y: 0.13699999999999993
     z: 0.0
-  - x: -0.39225
+  - x: -0.571
     y: 0.0
     z: 0.0
   - x: 0.0
-    y: -0.093
+    y: -0.135
     z: 0.0
   - x: 0.0
     y: 0.0
-    z: -0.09465
+    z: -0.12
   - x: 0.0
-    y: -0.0823
+    y: -0.117
     z: 0.0
   flange_identifier: tool0
   flange_pose:
@@ -91,20 +91,20 @@ joint_info:
   default_units: radian
   joint_identifier: shoulder_pan_joint
   joint_limits:
-    effort: 150.0
+    effort: 330.0
     lower: -6.283185307179586
     upper: 6.283185307179586
-    velocity: 3.15
+    velocity: 3.14
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
   default_units: radian
   joint_identifier: shoulder_lift_joint
   joint_limits:
-    effort: 150.0
+    effort: 330.0
     lower: -6.283185307179586
     upper: 6.283185307179586
-    velocity: 3.15
+    velocity: 3.14
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
@@ -114,36 +114,36 @@ joint_info:
     effort: 150.0
     lower: -3.141592653589793
     upper: 3.141592653589793
-    velocity: 3.15
+    velocity: 3.14
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
   default_units: radian
   joint_identifier: wrist_1_joint
   joint_limits:
-    effort: 28.0
+    effort: 54.0
     lower: -6.283185307179586
     upper: 6.283185307179586
-    velocity: 3.2
+    velocity: 6.28
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
   default_units: radian
   joint_identifier: wrist_2_joint
   joint_limits:
-    effort: 28.0
+    effort: 54.0
     lower: -6.283185307179586
     upper: 6.283185307179586
-    velocity: 3.2
+    velocity: 6.28
   joint_type: revolute
   passive: false
 - default_effort_units: newton_meter
   default_units: radian
   joint_identifier: wrist_3_joint
   joint_limits:
-    effort: 28.0
+    effort: 54.0
     lower: -6.283185307179586
     upper: 6.283185307179586
-    velocity: 3.2
+    velocity: 6.28
   joint_type: revolute
   passive: false
