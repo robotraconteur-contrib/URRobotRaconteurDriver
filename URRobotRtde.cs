@@ -184,6 +184,7 @@ namespace URRobotRaconteurDriver
         public override void Dispose()
         {
             rtde_client?.Dispose();
+            ur_program_runner?.Dispose();
             base.Dispose();
         }
 

@@ -155,8 +155,12 @@ namespace URRobotRaconteurDriver
         public void Dispose()
         {
             keep_going = false;
-            Monitor.PulseAll(this);
-            Monitor.PulseAll(exit_monitor);
+            try
+            {
+                Monitor.PulseAll(this);
+                Monitor.PulseAll(exit_monitor);
+            }
+            catch(Exception) { }
         }
 
         URScriptProgramSender ur_sender = new URScriptProgramSender();
