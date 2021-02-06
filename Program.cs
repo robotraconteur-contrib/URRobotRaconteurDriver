@@ -2,6 +2,7 @@
 using Mono.Unix;
 using RobotRaconteur;
 using RobotRaconteur.Companion.InfoParser;
+using RobotRaconteur.Companion.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -109,7 +110,8 @@ namespace URRobotRaconteurDriver
                     robot._start_robot();
                     using (var node_setup = new ServerNodeSetup("ur_robot", 58652, args))
                     {
-                        RobotRaconteurNode.s.RegisterService("robot", "com.robotraconteur.robotics.robot", robot);
+                        var robot_service_ctx = RobotRaconteurNode.s.RegisterService("robot", "com.robotraconteur.robotics.robot", robot);
+                        robot_service_ctx.SetServiceAttributes(AttributesUtil.GetDefaultServiceAtributesFromDeviceInfo(robot_info.Item1.device_info));
 
                         if (!wait_signal)
                         {
