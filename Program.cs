@@ -16,6 +16,7 @@ namespace URRobotRaconteurDriver
         {
             bool shouldShowHelp = false;
             string robot_info_file = null;
+            string robot_name = null;
             string robot_hostname = null;
             string driver_hostname = null;
             bool wait_signal = false;
@@ -24,6 +25,7 @@ namespace URRobotRaconteurDriver
 
             var options = new OptionSet {
                 { "robot-info-file=", n => robot_info_file = n },
+                { "robot-name=", "override the robot device name", n=>robot_name = n },
                 { "robot-hostname=", n => robot_hostname = n },
                 { "driver-hostname=", n=> driver_hostname = n },
                 { "ur-script-file=", n =>  ur_script_file = n},
@@ -92,7 +94,7 @@ namespace URRobotRaconteurDriver
                 }
             }
 
-            var robot_info = RobotInfoParser.LoadRobotInfoYamlWithIdentifierLocks(robot_info_file);
+            var robot_info = RobotInfoParser.LoadRobotInfoYamlWithIdentifierLocks(robot_info_file,robot_name);
             using (robot_info.Item2)
             {
                 IURRobot robot;
