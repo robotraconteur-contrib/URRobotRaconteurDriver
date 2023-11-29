@@ -19,7 +19,7 @@
   <ItemGroup>
     <PackageReference Include="DrekarLaunchProcessNET" Version="0.1.0" />
     <PackageReference Include="Mono.Options" Version="6.12.0.148" />
-    <PackageReference Include="RobotRaconteurNET.Companion" Version="0.2.0--dev8" />
+    <PackageReference Include="RobotRaconteurNET.Companion" Version="0.2.0" />
   </ItemGroup>
 
 </Project>
