@@ -1,4 +1,5 @@
-﻿using Mono.Options;
+﻿using DrekarLaunchProcess;
+using Mono.Options;
 using Mono.Unix;
 using RobotRaconteur;
 using RobotRaconteur.Companion.InfoParser;
@@ -19,7 +20,6 @@ namespace URRobotRaconteurDriver
             string robot_name = null;
             string robot_hostname = null;
             string driver_hostname = null;
-            bool wait_signal = false;
             string ur_script_file = null;
             bool cb2_compat = false;
 
@@ -31,7 +31,6 @@ namespace URRobotRaconteurDriver
                 { "ur-script-file=", n =>  ur_script_file = n},
                 { "cb2-compat", n => cb2_compat = n != null },
                 { "h|help", "show this message and exit", h => shouldShowHelp = h != null },
-                {"wait-signal", "wait for POSIX sigint or sigkill to exit", n=> wait_signal = n!=null}
             };
 
             List<string> extra;
@@ -115,23 +114,10 @@ namespace URRobotRaconteurDriver
                         var robot_service_ctx = RobotRaconteurNode.s.RegisterService("robot", "com.robotraconteur.robotics.robot", robot);
                         robot_service_ctx.SetServiceAttributes(AttributesUtil.GetDefaultServiceAtributesFromDeviceInfo(robot_info.Item1.device_info));
 
-                        if (!wait_signal)
+                        Console.WriteLine("Press Ctrl-C to exit");
+                        using (var wait_for_exit = new CWaitForExit())
                         {
-                            Console.WriteLine("Press enter to exit");
-                            Console.ReadKey();
-                        }
-                        else
-                        {
-                            UnixSignal[] signals = new UnixSignal[]{
-                                new UnixSignal (Mono.Unix.Native.Signum.SIGINT),
-                                new UnixSignal (Mono.Unix.Native.Signum.SIGTERM),
-                            };
-
-                            Console.WriteLine("Press Ctrl-C to exit");
-                            // block until a SIGINT or SIGTERM signal is generated.
-                            int which = UnixSignal.WaitAny(signals, -1);
-
-                            Console.WriteLine("Got a {0} signal, exiting", signals[which].Signum);
+                            wait_for_exit.WaitForExit();
                         }
                     }
                 }
