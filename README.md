@@ -6,6 +6,20 @@ Robot Raconteur standard robot driver for UR robots. Supports CB2, CB3, and e-Se
 
 Reverse Socket CB2 compatibilty mode is based on the ROS Industrial UR driver project: https://github.com/ros-industrial/universal_robot
 
+## Running With Docker
+
+Docker is the simplest way to run the driver on Linux. Use the following command to run the driver:
+
+```bash
+sudo docker run --rm --net=host -v /var/run/robotraconteur:/var/run/robotraconteur -v /var/lib/robotraconteur:/var/lib/robotraconteur -e ROBOT_HOSTNAME=192.168.55.2 -e ROBOT_INFO_FILE=/config/ur5e_robot_default_config.yml  --privileged  wasontech/ur-robotraconteur-driver
+```
+
+Replace `ROBOT_HOSTNAME` and `ROBOT_INFO_FILE` values with the appropriate values for your configuration.
+The IP address of the robot for `ROBOT_HOSTNAME` can be found on the teach pendant on the "About" screen. It may
+be necessary to mount a docker "volume" to access configuration yml files that are not included in the docker image.
+See the docker documentation for instructions on mounting a local directory as a volume so it can be accessed
+inside the docker.
+
 ## Building
 
 ### Ubuntu
