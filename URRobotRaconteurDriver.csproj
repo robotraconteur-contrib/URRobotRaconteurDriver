@@ -1,6 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageID>URRobotRaconteurDriver</PackageID>
+    <PackageVersion>0.5.0</PackageVersion>
+    <Version>0.5.0</Version>
+    <Authors>John Wason</Authors>
+    <Description>Robot Raconteur driver for Universal Robots</Description>
+    <Company>Wason Technology, LLC</Company>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <Platforms>AnyCPU;x64;x86</Platforms>
@@ -19,6 +29,7 @@
   <ItemGroup>
     <PackageReference Include="DrekarLaunchProcessNET" Version="0.1.0" />
     <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+    <PackageReference Include="RobotRaconteurNET" Version="1.2.1" />
     <PackageReference Include="RobotRaconteurNET.Companion" Version="0.2.0" />
   </ItemGroup>
 
