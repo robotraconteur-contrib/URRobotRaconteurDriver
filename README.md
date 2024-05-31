@@ -38,10 +38,12 @@ Install the Robot Raconteur C\# Native Library:
 
 Build the driver:
 
+    cd src
     dotnet build --configuration Release -o build  URRobotRaconteurDriver.csproj
 
 Run the driver:
 
-    dotnet URRobotRaconteurDriver.dll --robot-info-file=../ur5e_robot_default_config.yml --robot-hostname=<robot_ip>
+    cd src
+    dotnet URRobotRaconteurDriver.dll --robot-info-file=../config/ur5e_robot_default_config.yml --robot-hostname=<robot_ip>
 
 Replace `<robot_ip>` with the IP address of the robot.
