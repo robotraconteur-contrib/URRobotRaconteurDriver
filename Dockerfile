@@ -2,15 +2,13 @@ FROM ubuntu:jammy AS build-env
 WORKDIR /app
 RUN apt update && apt install wget sudo software-properties-common -y
 RUN apt install dotnet-sdk-6.0 -y
-COPY *.csproj ./
-RUN dotnet restore
 COPY . ./
-RUN dotnet publish /p:Configuration=Release /p:Platform="Any Cpu" -o output
+RUN dotnet publish /p:Configuration=Release /p:Platform="Any CPU" -o output
 
 FROM ubuntu:jammy
 WORKDIR /app
-COPY --from=build-env /app/output .
-COPY ./*.yml /config/
+COPY --from=build-env /app/output /opt/ur_robotraconteur_driver
+COPY ./config/*.yml /config/
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ROBOT_INFO_FILE=/config/ur5e_robot_default_config.yml
@@ -24,4 +22,4 @@ RUN sudo add-apt-repository ppa:robotraconteur/ppa -y \
     && sudo apt-get update \
     && sudo apt-get install librobotraconteur-net-native -y
 
-CMD exec dotnet URRobotRaconteurDriver.dll --robot-info-file=$ROBOT_INFO_FILE --robot-hostname=$ROBOT_HOSTNAME
+CMD exec /opt/ur_robotraconteur_driver/URRobotRaconteurDriver --robot-info-file=$ROBOT_INFO_FILE --robot-hostname=$ROBOT_HOSTNAME
