@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup>
+    <PackageID>URRobotRaconteurDriver</PackageID>
+    <PackageVersion>0.5.0</PackageVersion>
+    <Version>0.5.0</Version>
+    <Authors>John Wason</Authors>
+    <Description>Robot Raconteur driver for Universal Robots</Description>
+    <Company>Wason Technology, LLC</Company>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <FileUpgradeFlags>40</FileUpgradeFlags>
+    <UpgradeBackupLocation>C:\Users\wasonj\Documents\RobotRaconteur2\drivers\URRobotRaconteurDriver\Backup2\</UpgradeBackupLocation>
+    <OldToolsVersion>15.0</OldToolsVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="ur_reverse_socket_control_loop.script" />
+    <None Remove="ur_rtde_control_loop.script" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ur_rtde_control_loop.script" />
+    <EmbeddedResource Include="ur_reverse_socket_control_loop.script" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DrekarLaunchProcessNET" Version="0.1.0" />
+    <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+    <PackageReference Include="RobotRaconteurNET.Companion" Version="0.3.1" />
+  </ItemGroup>
+</Project>
