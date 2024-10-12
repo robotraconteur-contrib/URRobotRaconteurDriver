@@ -3,7 +3,7 @@ WORKDIR /app
 RUN apt update && apt install wget sudo software-properties-common -y
 RUN apt install dotnet-sdk-6.0 -y
 COPY . ./
-RUN dotnet publish /p:Configuration=Release /p:Platform="Any CPU" -o output
+RUN dotnet publish /p:Configuration=Release /p:Platform="Any CPU" --framework=net6.0 -o output
 
 FROM ubuntu:jammy
 WORKDIR /app
