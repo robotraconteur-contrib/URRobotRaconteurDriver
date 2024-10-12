@@ -16,10 +16,10 @@ joint_names = [j.joint_identifier.name for j in robot_info.joint_info]
 halt_mode = robot_const["RobotCommandMode"]["halt"]
 trajectory_mode = robot_const["RobotCommandMode"]["trajectory"]
 
-JointTrajectoryWaypoint = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectoryWaypoint",c)
-JointTrajectory = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectory",c)
+JointTrajectoryWaypoint = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectoryWaypoint", c)
+JointTrajectory = RRN.GetStructureType("com.robotraconteur.robotics.trajectory.JointTrajectory", c)
 
-#c.reset_errors()
+# c.reset_errors()
 
 c.command_mode = halt_mode
 time.sleep(0.1)
@@ -38,7 +38,7 @@ j_end = [0, -1, -1.5, 0, 0, 0]
 
 for i in range(11):
     wp = JointTrajectoryWaypoint()
-    wp.joint_position = (j_end - j_start)*(float(i)/10.0) + j_start
+    wp.joint_position = (j_end - j_start) * (float(i) / 10.0) + j_start
     wp.time_from_start = i
     waypoints.append(wp)
 
@@ -54,7 +54,7 @@ while (True):
     t = time.time()
 
     robot_state = state_w.InValue
-    
+
     res, gen_state = traj_gen.TryNext()
     if not res:
         break
@@ -64,9 +64,9 @@ while (True):
 waypoints = []
 
 for i in range(101):
-    t = float(i)/10.0
+    t = float(i) / 10.0
     wp = JointTrajectoryWaypoint()
-    cmd = np.deg2rad(15)*np.sin(2*np.pi*(t/10.0))*np.array([1,0,0,0,0.5,-1])
+    cmd = np.deg2rad(15) * np.sin(2 * np.pi * (t / 10.0)) * np.array([1, 0, 0, 0, 0.5, -1])
     cmd = cmd + j_end
     wp.joint_position = cmd
     wp.time_from_start = t
@@ -87,5 +87,5 @@ while (True):
     res, gen_state = traj_gen.TryNext()
     if not res:
         break
-    
+
     print(gen_state)
