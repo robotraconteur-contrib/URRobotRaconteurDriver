@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
@@ -224,13 +224,13 @@ namespace UR.ControllerClient
                         Connected = true;
                         while (keep_going)
                         {
-                            DoReceiveRobotState(net_stream);                            
-                        }                        
+                            DoReceiveRobotState(net_stream);
+                        }
                         return;
                     }
                 }
                 catch (Exception e)
-                {                   
+                {
                     Console.WriteLine($"Robot communication error: {e.ToString()}");
                     LastException = e;
                 }
@@ -296,7 +296,7 @@ namespace UR.ControllerClient
                 pos += l;
             }
             while (pos < len);
-                        
+
             package_type = recv_buf[4];
 
             return package_reader.BeginController(new ArraySegment<byte>(recv_buf, 0, len));

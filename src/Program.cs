@@ -1,4 +1,4 @@
-﻿using DrekarLaunchProcess;
+using DrekarLaunchProcess;
 using Mono.Options;
 using Mono.Unix;
 using RobotRaconteur;
@@ -93,7 +93,7 @@ namespace URRobotRaconteurDriver
                 }
             }
 
-            var robot_info = RobotInfoParser.LoadRobotInfoYamlWithIdentifierLocks(robot_info_file,robot_name);
+            var robot_info = RobotInfoParser.LoadRobotInfoYamlWithIdentifierLocks(robot_info_file, robot_name);
             using (robot_info.Item2)
             {
                 IURRobot robot;

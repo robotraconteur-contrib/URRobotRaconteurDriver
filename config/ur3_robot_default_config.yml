@@ -10,15 +10,15 @@ device_info:
   user_description: Universal Robots UR3 Robot
   serial_number: 123456789
   device_classes:
-    - class_identifier:
-        name: robot
-        uuid: 39b513e7-21b9-4b49-8654-7537473030eb
-      subclasses: 
-        - serial
-        - serial_six_axis
-        - cobot
+  - class_identifier:
+      name: robot
+      uuid: 39b513e7-21b9-4b49-8654-7537473030eb
+    subclasses:
+    - serial
+    - serial_six_axis
+    - cobot
   implemented_types:
-    - com.robotraconteur.robotics.robot.Robot
+  - com.robotraconteur.robotics.robot.Robot
 robot_type: serial
 robot_capabilities:
 - jog_command

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
@@ -26,7 +26,7 @@ namespace UR.ControllerClient
         MSG_SET_TOOL_VOLTAGE = 13,
         MSG_SET_ANALOG_OUT = 14,
         MSG_BRAKING = 15,
-        MSG_SERVOED=16,
+        MSG_SERVOED = 16,
         MSG_IDLE = 17,
         MSG_HELLO = 18,
         MSG_LISTENING = 19,
@@ -97,7 +97,7 @@ namespace UR.ControllerClient
 
         AutoResetEvent sync = new AutoResetEvent(false);
 
-        
+
         public void SetServojCommand(double[] cmd)
         {
             //Console.WriteLine("SetServojCommand {0}, {1}, {2}", cmd[0], cmd[1], cmd[2]);
@@ -106,7 +106,7 @@ namespace UR.ControllerClient
                 servoj_command = cmd;
                 speedj_command = null;
                 sync.Set();
-            }            
+            }
         }
 
         public void SetSpeedjCommand(double[] cmd)
@@ -182,7 +182,7 @@ namespace UR.ControllerClient
                                 if (p == null && s == null)
                                 {
                                     w.Begin();
-                                    w.Write((int)ReverseSocketMsgTypeCode.MSG_PING);                                    
+                                    w.Write((int)ReverseSocketMsgTypeCode.MSG_PING);
                                     lock (this)
                                     {
                                         net_stream.Write(w.GetRawBytes());
@@ -244,7 +244,7 @@ namespace UR.ControllerClient
                                 {
                                     throw new IOException("Invalid message type");
                                 }
-                                                                
+
                             }
                             return;
                         }
@@ -309,7 +309,7 @@ namespace UR.ControllerClient
             w.Begin();
             w.Write((int)ReverseSocketMsgTypeCode.MSG_SET_ANALOG_OUT);
             w.Write((int)index);
-            w.Write((int)(value*MULT_analog));
+            w.Write((int)(value * MULT_analog));
             lock (this)
             {
                 net_stream.Write(w.GetRawBytes());
