@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -56,7 +56,7 @@ namespace UR.RTDE
 
         PackageWriter pkg_writer;
 
-        string[] outputs = { "output_int_register_0", "actual_q", "actual_qd", "actual_TCP_pose", "actual_TCP_speed", "target_q", "target_qd", "target_moment", "robot_status_bits", "safety_status_bits", 
+        string[] outputs = { "output_int_register_0", "actual_q", "actual_qd", "actual_TCP_pose", "actual_TCP_speed", "target_q", "target_qd", "target_moment", "robot_status_bits", "safety_status_bits",
             "actual_digital_input_bits", "actual_digital_output_bits",  "standard_analog_input0", "standard_analog_input1", "standard_analog_output0",
             "standard_analog_output1", "tool_analog_input0", "tool_analog_input1" };
         string[] inputs_1 = { "input_int_register_0", "input_int_register_1", "input_double_register_0", "input_double_register_1", "input_double_register_2",
@@ -100,7 +100,7 @@ namespace UR.RTDE
 
         Stopwatch stopwatch;
 
-        public void Start(Stopwatch stopwatch, string robot_hostname, int robot_rtde_port = 30004 )
+        public void Start(Stopwatch stopwatch, string robot_hostname, int robot_rtde_port = 30004)
         {
             this.stopwatch = stopwatch;
             hostname = robot_hostname;
@@ -129,7 +129,7 @@ namespace UR.RTDE
 
         public void _run()
         {
-            while(keep_going)
+            while (keep_going)
             {
                 try
                 {
@@ -143,20 +143,20 @@ namespace UR.RTDE
                         inputs_2_id = DoSetupControllerInputs2(net_stream);
                         DoPackageStart(net_stream);
 
-                        LastException = null;                        
+                        LastException = null;
                         while (keep_going)
                         {
                             DoReceiveControllerOutputs(net_stream);
                             DoSendControllerInputs1(net_stream);
                             DoSendControllerInputs2(net_stream);
-                        }                        
+                        }
                         return;
                     }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Robot communication error: {e.ToString()}");
-                    LastException = e;                   
+                    LastException = e;
                 }
 
                 for (int i = 0; i < 10; i++)
@@ -178,7 +178,7 @@ namespace UR.RTDE
             var req = pkg_writer.GetBytes();
             s.Write(req);
 
-            var res_reader = RecvPackage(s,RtdePackageType.RTDE_REQUEST_PROTOCOL_VERSION);
+            var res_reader = RecvPackage(s, RtdePackageType.RTDE_REQUEST_PROTOCOL_VERSION);
             if (!res_reader.ReadBool())
             {
                 throw new IOException("Could not negotiate RTDE protocol with robot");
@@ -237,7 +237,7 @@ namespace UR.RTDE
 
         void DoPackageStart(NetworkStream s)
         {
-            pkg_writer.Begin(RtdePackageType.RTDE_CONTROL_PACKAGE_START);            
+            pkg_writer.Begin(RtdePackageType.RTDE_CONTROL_PACKAGE_START);
             var req = pkg_writer.GetBytes();
             s.Write(req);
 
@@ -283,7 +283,7 @@ namespace UR.RTDE
         void DoSendControllerInputs1(NetworkStream s)
         {
             double[] cmd;
-            lock(this)
+            lock (this)
             {
                 cmd = joint_cmd_pos;
                 joint_cmd_pos = null;
@@ -304,7 +304,7 @@ namespace UR.RTDE
                 pkg_writer.Write(cmd);
 
             }
-            
+
             var req = pkg_writer.GetBytes();
             s.Write(req);
         }
@@ -327,7 +327,7 @@ namespace UR.RTDE
                 digital_output_mask = 0;
                 analog_output_mask = 0;
             }
-                     
+
             if (digital_output_mask_l == 0 && analog_output_mask_l == 0)
             {
                 return;
@@ -353,7 +353,7 @@ namespace UR.RTDE
             int pos = 0;
             do
             {
-                var l =  s.Read(recv_buf, pos, 2 - pos);
+                var l = s.Read(recv_buf, pos, 2 - pos);
                 if (l == 0) throw new IOException("Connection closed");
                 pos += l;
             }
@@ -379,7 +379,7 @@ namespace UR.RTDE
         public void SetJointCommand(double[] joint_cmd)
         {
             Debug.Assert(joint_cmd.Length == 6);
-            lock(this)
+            lock (this)
             {
                 this.joint_cmd_pos = joint_cmd;
             }
@@ -387,7 +387,7 @@ namespace UR.RTDE
 
         public void ClearJointCommand()
         {
-            lock(this)
+            lock (this)
             {
                 this.joint_cmd_pos = null;
             }
@@ -452,5 +452,5 @@ namespace UR.RTDE
         }
     }
 
-    
+
 }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
     <PackageID>URRobotRaconteurDriver</PackageID>
     <PackageVersion>0.5.0</PackageVersion>

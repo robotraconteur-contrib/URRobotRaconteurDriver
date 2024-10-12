@@ -1,4 +1,4 @@
-﻿def driverProg():
+def driverProg():
   HOSTNAME = "%(driver_hostname)"
   PORT = %(driver_reverseport)
   MSG_OUT = 1
@@ -16,7 +16,7 @@
   MSG_SET_TOOL_VOLTAGE = 13
   MSG_SET_ANALOG_OUT = 14
   MSG_BRAKING = 15
-  MSG_SERVOED = 16  
+  MSG_SERVOED = 16
   MSG_IDLE = 17
   MSG_HELLO = 18
   MSG_LISTENING = 19
@@ -45,7 +45,7 @@
   MULT_blend = 1000.0
   MULT_analog = 1000000.0
   pi = 3.14159265359
-  
+
   stopj(1)
 
   def send_out(msgcode):
@@ -53,7 +53,7 @@
     socket_send_int(msgcode)
     exit_critical
   end
-  
+
   def send_waypoint_finished(waypoint_id):
     enter_critical
     socket_send_int(MSG_WAYPOINT_FINISHED)
@@ -61,7 +61,7 @@
     exit_critical
   end
 
-  
+
   SERVO_IDLE = 0
   SERVO_RUNNING = 1
   cmd_servo_state = SERVO_IDLE
@@ -72,7 +72,7 @@
   cmd_seqno = 0
   thread_seqno = 0
   def set_servo_setpoint(mode, id, q, dt):
-    
+
     enter_critical
     cmd_servo_state = SERVO_RUNNING
     cmd_servo_id = id
@@ -81,10 +81,10 @@
     cmd_servo_mode = mode
     cmd_seqno = thread_seqno
     exit_critical
-    
+
   end
   thread servoThread():
-    
+
     state = SERVO_IDLE
     while True:
       # Latches the new command
@@ -101,7 +101,7 @@
       state = cmd_servo_state
       cmd_servo_state = SERVO_IDLE
       exit_critical
-      
+
       # do_brake = False
       # state == SERVO_RUNNING
       # Executes the command
@@ -119,7 +119,7 @@
           else:
             stopj(2)
           end
-        end       
+        end
         #send_out(MSG_SERVOED)
       else:
         #send_out(MSG_IDLE)
@@ -127,12 +127,12 @@
       end
     end
   end
-  
+
   socket_open(HOSTNAME, PORT)
   send_out(MSG_HELLO)
-  
+
   thread_servo = run servoThread()
-  
+
   # Servoes in a circle
   #movej([1.5,-0.4,-1.57,0,0,0], 3, 0.75, 1.0)
   #t = 0
@@ -146,12 +146,12 @@
   #  t = t + 0.08
   #  sleep(0.08)
   #end
-  
+
   while True:
     #send_out(MSG_LISTENING)
     sync()
     ll = socket_read_binary_integer(1)
-    
+
     if ll[0] == 0:
       #send_out(MSG_RECV_NOTHING)
     elif ll[0] > 1:
@@ -167,7 +167,7 @@
         if params_movej[0] == 0:
           send_out(MSG_PARAM_ERR)
         end
-        
+
         # Unpacks the parameters
         waypoint_id = params_movej[1]
         q = [params_movej[2] / MULT_jointstate,
@@ -180,7 +180,7 @@
         v = params_movej[9] / MULT_jointstate
         t = params_movej[10] / MULT_time
         r = params_movej[11] / MULT_blend
-        
+
         # Sends the command
         send_out(MSG_MOVEJ_STARTED)
         movej(q, a, v, t, r)
@@ -192,7 +192,7 @@
         if params_servoj[0] == 0:
           send_out(MSG_PARAM_ERR)
         end
-        
+
         # Unpacks the parameters
         waypoint_id = params_servoj[1]
         q = [params_servoj[2] / MULT_jointstate,
@@ -202,19 +202,19 @@
                    params_servoj[6] / MULT_jointstate,
                    params_servoj[7] / MULT_jointstate]
         t = params_servoj[8] / MULT_time
-        
+
         # Servos
         #servoj(q, 3, 0.1, t)
         #send_waypoint_finished(waypoint_id)
         set_servo_setpoint(mtype, waypoint_id, q, t)
         send_out(MSG_RECV_SERVOJ)
-        
+
       elif mtype == MSG_SET_PAYLOAD:
         params = socket_read_binary_integer(1)
         if params[0] == 0:
           send_out(MSG_PARAM_ERR)
         end
-        
+
         payload = params[1] / MULT_payload
         #send_out(payload)
         send_out(MSG_RECV_PAYLOAD)
@@ -269,6 +269,6 @@
       end
     end
   end
-  
+
   socket_send_int(MSG_QUIT)
 end

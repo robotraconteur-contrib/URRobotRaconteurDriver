@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -116,7 +116,7 @@ namespace UR.Package
         }
 
         public ArraySegment<byte> GetRawBytes()
-        {            
+        {
             return new ArraySegment<byte>(buffer, 0, (int)buffer_pos);
         }
 
@@ -237,7 +237,7 @@ namespace UR.Package
             temp[2] = buffer[buffer_pos + 1];
             temp[1] = buffer[buffer_pos + 2];
             temp[0] = buffer[buffer_pos + 3];
-            
+
             buffer_pos += 4;
             return BitConverter.ToSingle(temp, 0);
         }
@@ -310,7 +310,7 @@ namespace UR.Package
             temp[3] = buffer[buffer_pos];
             temp[2] = buffer[buffer_pos + 1];
             temp[1] = buffer[buffer_pos + 2];
-            temp[0] = buffer[buffer_pos + 3];            
+            temp[0] = buffer[buffer_pos + 3];
             int len = BitConverter.ToInt32(temp, 0);
             sub_package_type = buffer[buffer_pos + 4];
 

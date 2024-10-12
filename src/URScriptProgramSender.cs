@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
@@ -11,14 +11,14 @@ namespace URRobotRaconteurDriver
         bool keep_going;
         string hostname;
         int port;
-        
+
         public void Start(string robot_hostname, int robot_port = 30001)
         {
             hostname = robot_hostname;
             port = robot_port;
-            keep_going = true;            
+            keep_going = true;
         }
-                
+
         public void SendAndRunProgram(string program)
         {
             byte[] program_bytes = Encoding.ASCII.GetBytes(program);
@@ -32,14 +32,14 @@ namespace URRobotRaconteurDriver
             {
                 throw new Exception("Failed to send UR program");
             }
-            
+
             client.EndConnect(result);
-            
-            using(client)
+
+            using (client)
             {
                 client.GetStream().Write(program_bytes, 0, program_bytes.Length);
-                client.GetStream().Flush();                
-            }            
+                client.GetStream().Flush();
+            }
         }
 
         public void SendReset()
@@ -81,9 +81,9 @@ namespace URRobotRaconteurDriver
             {
                 try
                 {
-                    while(keep_going)
+                    while (keep_going)
                     {
-                        lock(this)
+                        lock (this)
                         {
                             while (reverse_socket_connected && keep_going)
                             {
@@ -135,7 +135,7 @@ namespace URRobotRaconteurDriver
             catch { }
         }
 
-        
+
         bool reverse_socket_connected;
 
         public void UpdateConnectedStatus(bool connected)
@@ -160,7 +160,7 @@ namespace URRobotRaconteurDriver
                 Monitor.PulseAll(this);
                 Monitor.PulseAll(exit_monitor);
             }
-            catch(Exception) { }
+            catch (Exception) { }
         }
 
         URScriptProgramSender ur_sender = new URScriptProgramSender();

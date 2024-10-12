@@ -1,4 +1,4 @@
-﻿using com.robotraconteur.robotics.robot;
+using com.robotraconteur.robotics.robot;
 using RobotRaconteur.Companion.Robot;
 using System;
 using System.Collections.Generic;

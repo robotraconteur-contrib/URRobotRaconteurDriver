@@ -1,4 +1,4 @@
-﻿using com.robotraconteur.robotics.robot;
+using com.robotraconteur.robotics.robot;
 using RobotRaconteur.Companion.Robot;
 using System;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ namespace URRobotRaconteurDriver
                 _joint_names = new string[] { "shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint" };
             }
 
-            this.ur_robot_prog = ur_robot_prog.Replace("%(driver_hostname)",driver_hostname).Replace("%(driver_reverseport)","50001").Replace("\r\n","\n");
+            this.ur_robot_prog = ur_robot_prog.Replace("%(driver_hostname)", driver_hostname).Replace("%(driver_reverseport)", "50001").Replace("\r\n", "\n");
             this.driver_hostname = driver_hostname;
 
             // TODO: figure out why trajectory tolerance is so poor
@@ -150,7 +150,7 @@ namespace URRobotRaconteurDriver
         {
             bool res = base._verify_communication(now);
             if (!res) return false;
-            
+
             lock (this)
             {
                 ur_program_runner.UpdateConnectedStatus(reverse_client.Connected);
@@ -177,7 +177,7 @@ namespace URRobotRaconteurDriver
         public override Task async_setf_signal(string signal_name, double[] value_, int timeout = -1)
         {
 
-            var digital_out_match = Regex.Match(signal_name, @"DO(\d+)");            
+            var digital_out_match = Regex.Match(signal_name, @"DO(\d+)");
 
             if (digital_out_match.Success)
             {
@@ -192,7 +192,7 @@ namespace URRobotRaconteurDriver
                     throw new ArgumentException("Expected single element array for digital signal");
                 }
 
-                
+
                 reverse_client.SetDigitalOut(digital_out_index, value_[0] != 0.0);
                 return Task.FromResult(0);
             }
@@ -233,10 +233,10 @@ namespace URRobotRaconteurDriver
                 if (digital_in_index < 0 || digital_in_index > 9)
                 {
                     throw new ArgumentException("Digital input DI0 through DI9 expected");
-                }                
+                }
 
                 bool val = (client_rt.state.digital_input_bits & (1u >> digital_in_index)) != 0;
-                
+
                 return Task.FromResult(new double[] { val ? 1.0 : 0.0 });
             }
 

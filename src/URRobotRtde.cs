@@ -1,4 +1,4 @@
-﻿using com.robotraconteur.geometry;
+using com.robotraconteur.geometry;
 using com.robotraconteur.robotics.robot;
 using RobotRaconteur.Companion.Robot;
 using System;
@@ -23,7 +23,7 @@ namespace URRobotRaconteurDriver
 
         public static Quaternion rvec_to_quaternion(double[] rvec)
         {
-            double norm = Math.Sqrt(Math.Pow(rvec[3],2) + Math.Pow(rvec[4],2) + Math.Pow(rvec[5],2));
+            double norm = Math.Sqrt(Math.Pow(rvec[3], 2) + Math.Pow(rvec[4], 2) + Math.Pow(rvec[5], 2));
             if (norm < 1e-5)
             {
                 return new Quaternion { w = 1, x = 0, y = 0, z = 0 };
@@ -68,7 +68,7 @@ namespace URRobotRaconteurDriver
             ur_program_runner.Start(ur_robot_prog, robot_hostname);
 
             rtde_client = new RtdeClient();
-            
+
 
             base._start_robot();
             rtde_client.Start(_stopwatch, robot_hostname);
@@ -121,7 +121,7 @@ namespace URRobotRaconteurDriver
                 _error = (safety_bits & ((uint)RTDE_SAFETY_STATUS_BITS.fault)) != 0 || (safety_bits & ((uint)RTDE_SAFETY_STATUS_BITS.violation)) != 0;
                 _estop_source = 0;
                 _operational_mode = RobotOperationalMode.cobot;
-                
+
             }
 
             if (rtde_client.Connected)
@@ -131,7 +131,7 @@ namespace URRobotRaconteurDriver
                 _last_endpoint_state = now;
             }
             lock (rtde_client)
-            {                
+            {
                 _joint_position = rtde_client.actual_q;
                 _joint_velocity = rtde_client.actual_qd;
                 _joint_effort = rtde_client.target_moment;
@@ -167,7 +167,7 @@ namespace URRobotRaconteurDriver
         {
             bool res = base._verify_communication(now);
             if (!res) return false;
-            
+
             lock (this)
             {
                 ur_program_runner.UpdateConnectedStatus(rtde_client.Connected);
@@ -191,7 +191,7 @@ namespace URRobotRaconteurDriver
         public override Task async_setf_signal(string signal_name, double[] value_, int timeout = -1)
         {
 
-            var digital_out_match = Regex.Match(signal_name, @"DO(\d+)");            
+            var digital_out_match = Regex.Match(signal_name, @"DO(\d+)");
 
             if (digital_out_match.Success)
             {
@@ -206,7 +206,7 @@ namespace URRobotRaconteurDriver
                     throw new ArgumentException("Expected single element array for digital signal");
                 }
 
-                
+
                 rtde_client.SetDigitalOut(digital_out_index, value_[0] != 0.0);
                 return Task.FromResult(0);
             }
@@ -247,7 +247,7 @@ namespace URRobotRaconteurDriver
                 if (digital_in_index < 0 || digital_in_index > 9)
                 {
                     throw new ArgumentException("Digital input DI0 through DI9 expected");
-                }                
+                }
 
                 if (digital_in_index >= 8)
                 {
@@ -256,7 +256,7 @@ namespace URRobotRaconteurDriver
                 }
 
                 bool val = (rtde_client.actual_digital_input_bits & (1u >> digital_in_index)) != 0;
-                
+
                 return Task.FromResult(new double[] { val ? 1.0 : 0.0 });
             }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
@@ -95,11 +95,11 @@ namespace UR.ControllerClient
                     using (var socket = new TcpClient(hostname, port))
                     {
                         var net_stream = socket.GetStream();
-                                                                       
+
                         while (keep_going)
                         {
                             Connected = true;
-                            DoReceiveControllerOutputs(net_stream);                            
+                            DoReceiveControllerOutputs(net_stream);
                         }
                         return;
                     }
@@ -131,7 +131,7 @@ namespace UR.ControllerClient
             var res_reader = RecvPackage(s);
             lock (this)
             {
-                state.Read(res_reader);                
+                state.Read(res_reader);
             }
         }
 
