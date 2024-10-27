@@ -32,6 +32,16 @@ services on the network.
 - Root Object Type:
   - `com.robotraconteur.robotics.robot.Robot`
 
+## Robot Configuration
+
+**The robot must be in remote mode to use this driver**
+
+Older robots based on CB2 do not require this configuration.
+
+See Section 21.4.5 of the [UR5e User Manual](https://s3-eu-west-1.amazonaws.com/ur-support-site/68265/99455_UR5e_User_Manual_en_US.pdf)
+or the instructions from [RoboDK How to enable Remote Control on URe](https://robodk.com/doc/en/Robots-Universal-Robots-How-enable-Remote-Control-URe.html)
+for more information.
+
 ## Command Line Arguments
 
 The following command line arguments are available:
